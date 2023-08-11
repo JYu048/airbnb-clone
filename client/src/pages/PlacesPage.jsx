@@ -41,8 +41,17 @@ function PlacesPage() {
   function uploadPhoto(e) {
     const files = e.target.files;
     const data = new FormData();
-    data.set("file", files[0]);
-    axios.post("/upload", data);
+
+    for (let i = 0; i < files.length; i++) data.append("photos", files[i]);
+
+    axios
+      .post("/upload", data, {
+        headers: { "Content-type": "multipart/form-data" },
+      })
+      .then((res) => {
+        const { data: filenames } = res;
+        setAddedPhotos((prev) => [...prev, ...filenames]);
+      });
   }
 
   return (
@@ -108,16 +117,17 @@ function PlacesPage() {
             <div className="mt-2 grid gap-2 grid-cols-3 md:grid-cols-4 lg:grid-cols-6 ">
               {addedPhotos.length > 0 &&
                 addedPhotos.map((link) => (
-                  <div key={link}>
+                  <div key={link} className="h-32 flex object-cover">
                     <img
                       src={"http://localhost:5500/uploads/" + link}
-                      className="rounded-xl"
+                      className="rounded-2xl w-full"
                     />
                   </div>
                 ))}
               <label className="flex justify-center items-center gap-2 text-2xl text-gray-600 border bg-transparent rounded-2xl p-2">
                 <input
                   type="file"
+                  multiple
                   className="hidden"
                   onChange={(e) => uploadPhoto(e)}
                 />
