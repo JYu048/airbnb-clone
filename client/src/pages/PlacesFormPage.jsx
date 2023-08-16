@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Perks from "../components/Perks";
 import PhotosUploader from "../components/PhotosUploader";
 import axios from "axios";
 import AccountNav from "../components/AccountNav";
+import { Navigate, useParams } from "react-router-dom";
 
 function PlacesFormPage() {
+  const { id } = useParams();
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
   const [addedPhotos, setAddedPhotos] = useState([]);
@@ -14,6 +16,27 @@ function PlacesFormPage() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [maxGuests, setMaxGuests] = useState(1);
+  const [price, setPrice] = useState(100);
+  const [redirect, setRedirect] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    axios.get("/places/" + id).then((res) => {
+      const { data } = res;
+      setTitle(data.title);
+      setAddress(data.address);
+      setAddedPhotos(data.photos);
+      setDescription(data.description);
+      setPerks(data.perks);
+      setExtraInfo(data.extraInfo);
+      setCheckIn(data.checkIn);
+      setCheckOut(data.checkOut);
+      setMaxGuests(data.maxGuests);
+      setPrice(data.price);
+    });
+  }, [id]);
 
   function preInput(header, description) {
     return (
@@ -24,7 +47,7 @@ function PlacesFormPage() {
     );
   }
 
-  async function addNewPlace(e) {
+  async function savePlace(e) {
     e.preventDefault();
     const placeData = {
       title,
@@ -36,14 +59,26 @@ function PlacesFormPage() {
       checkIn,
       checkOut,
       maxGuests,
+      price,
     };
-    await axios.post("/places", placeData);
+
+    if (id) {
+      axios.put("/places/", { id, ...placeData });
+    } else {
+      await axios.post("/places", placeData);
+    }
+
+    setRedirect(true);
+  }
+
+  if (redirect) {
+    return <Navigate to={"/account/places"} />;
   }
 
   return (
     <div>
       <AccountNav />
-      <form onSubmit={(e) => addNewPlace(e)}>
+      <form onSubmit={(e) => savePlace(e)}>
         {preInput(
           "Title",
           "Title for your place, should be short and catchy as in advertisement"
@@ -84,7 +119,7 @@ function PlacesFormPage() {
           "Check in & out times, max guests",
           "add check in and out times, remember to have some time window for cleaning the room between guests"
         )}
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4">
           <div>
             <h3 className="mt-2 -mb-1">Check in time</h3>
             <input
@@ -108,6 +143,14 @@ function PlacesFormPage() {
               type="number"
               value={maxGuests}
               onChange={(e) => setMaxGuests(e.target.value)}
+            />
+          </div>
+          <div>
+            <h3 className="mt-2 -mb-1">Price per night</h3>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
             />
           </div>
         </div>
