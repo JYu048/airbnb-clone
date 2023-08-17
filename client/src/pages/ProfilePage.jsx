@@ -14,6 +14,7 @@ function ProfilePage() {
     await axios.post("/logout");
     setRedirect("/");
     setUser(null);
+    alert("logged out succesfully");
   }
 
   if (!ready) {

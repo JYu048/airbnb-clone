@@ -1,16 +1,16 @@
 const express = require("express");
 const cors = require("cors");
-const corsOptions = require("./config/corsOptions");
+
 const { default: mongoose } = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User");
 const Place = require("./models/Place");
+const Booking = require("./models/Booking");
 const cookieParser = require("cookie-parser");
 const imageDownloader = require("image-downloader");
 const multer = require("multer");
 const fs = require("fs");
-const Booking = require("./models/Booking");
 require("dotenv").config();
 const app = express();
 
@@ -37,10 +37,6 @@ function getUserDataFromReq(req) {
     });
   });
 }
-
-app.get("/test", (req, res) => {
-  res.json("test ok");
-});
 
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -78,10 +74,10 @@ app.post("/login", async (req, res) => {
         }
       );
     } else {
-      res.json("pass not ok");
+      res.status(401).json({ message: "Invalid credentials" });
     }
   } else {
-    res.json("not found");
+    res.status(404).json({ message: "User not found" });
   }
 });
 
@@ -100,7 +96,7 @@ app.get("/profile", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.cookie("token", "").json(true);
+  res.cookie("token", "").json({ message: "Logged out succesfully" });
 });
 
 app.post("/upload-by-link", async (req, res) => {
@@ -224,24 +220,33 @@ app.get("/places", async (req, res) => {
 });
 
 app.post("/bookings", async (req, res) => {
-  const userData = await getUserDataFromReq(req);
-  const { place, checkIn, checkOut, numGuests, name, phone, price } = req.body;
-  Booking.create({
-    place,
-    user: userData.id,
-    checkIn,
-    checkOut,
-    numGuests,
-    name,
-    phone,
-    price,
-  })
-    .then((doc) => {
-      res.json(doc);
-    })
-    .catch((err) => {
-      throw err;
+  try {
+    if (!req.cookies?.token) {
+      return res
+        .status(401)
+        .json({ message: "Need to be logged in to book places" });
+    }
+
+    const userData = await getUserDataFromReq(req);
+    const { place, checkIn, checkOut, numGuests, name, phone, price } =
+      req.body;
+    const response = await Booking.create({
+      place,
+      user: userData.id,
+      checkIn,
+      checkOut,
+      numGuests,
+      name,
+      phone,
+      price,
     });
+
+    res.json(response);
+  } catch {
+    res
+      .status(500)
+      .json({ message: "An error occured while processing your request" });
+  }
 });
 
 app.get("/bookings", async (req, res) => {

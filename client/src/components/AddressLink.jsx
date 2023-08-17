@@ -4,7 +4,6 @@ function AddressLink({ place, className = null }) {
   }
 
   className += " flex font-semibold underline";
-  console.log(className);
 
   return (
     <a

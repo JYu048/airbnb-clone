@@ -17,7 +17,12 @@ function LoginPage() {
       alert("login succesful");
       navigate("/");
     } catch (e) {
-      alert("Login failed");
+      console.log(e);
+      if (e.response) {
+        alert("Login failed: " + e.response.data.message);
+      } else {
+        alert("Login failed");
+      }
     }
   }
 
