@@ -12,6 +12,17 @@ function PlacesPage() {
     });
   }, []);
 
+  const truncateDescription = (description, maxLength) => {
+    if (description.length <= maxLength) {
+      return description;
+    }
+
+    const truncated = description.substr(0, maxLength);
+    const lastSpaceIndex = truncated.lastIndexOf(" ");
+
+    return truncated.substr(0, lastSpaceIndex) + "...";
+  };
+
   return (
     <div className="">
       <AccountNav />
@@ -49,6 +60,7 @@ function PlacesPage() {
               <div className="w-32 h-32 bg-gray-300 grow shrink-0">
                 {place.photos.length > 0 && (
                   <img
+                    className="object-cover aspect-square"
                     src={`http://localhost:5500/uploads/${place.photos[0]}`}
                     alt=""
                   />
@@ -56,7 +68,9 @@ function PlacesPage() {
               </div>
               <div className="grow-0 shrink">
                 <h2 className="text-xl ">{place.title}</h2>
-                <p className="text-sm mt-2">{place.description}</p>
+                <p className="text-sm mt-2">
+                  {truncateDescription(place.description, 500)}
+                </p>
               </div>
             </Link>
           ))}
